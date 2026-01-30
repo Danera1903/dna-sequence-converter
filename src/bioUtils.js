@@ -26,7 +26,7 @@ const CODON_TABLE = {
     'ACU': 'T', 'ACC': 'T', 'ACA': 'T', 'ACG': 'T',
     'AAU': 'N', 'AAC': 'N', 'AAA': 'K', 'AAG': 'K',
     'AGU': 'S', 'AGC': 'S', 'AGA': 'R', 'AGG': 'R',
-    'GUU': 'V', 'GUG': 'V', 'GUA': 'V', 'GUG': 'V',
+    'GUU': 'V', 'GUG': 'V', 'GUA': 'V', 'GUC': 'V',
     'GCU': 'A', 'GCC': 'A', 'GCA': 'A', 'GCG': 'A',
     'GAU': 'D', 'GAC': 'D', 'GAA': 'E', 'GAG': 'E',
     'GGU': 'G', 'GGC': 'G', 'GGA': 'G', 'GGG': 'G'

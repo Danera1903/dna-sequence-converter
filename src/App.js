@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Dna, ArrowRight, Info } from 'lucide-react';
 import * as bioUtils from './bioUtils';
 
 const DNAConverter = () => {
