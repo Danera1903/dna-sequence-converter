@@ -132,6 +132,56 @@ export const calculateGC = (sequence) => {
 /**Gets genetic code information
  * @return {Object} - Information about the genetic code used
  */
+
+/**
+ * Parses FASTA format input
+ * @param {string} input - FASTA formatted text
+ * @returns {Array} - Array of objects with id, description, and sequence
+ */
+export const parseFASTA = (input) => {
+    const sequences = [];
+    const lines = input.trim().split('\n');
+    let currentSeq = null;
+
+    lines.forEach(line => {
+        line = line.trim();
+
+        if (line.startsWith('>')) {
+            //New sequence header
+            if (currentSeq) {
+                sequences.push(currentSeq);
+            }
+
+            //Parse header: >id description
+            const headerParts = line.substring(1).split(' ');
+            currentSeq = {
+                id: headerParts[0] || 'sequence',
+                description: headerParts.slice(1).join(' ') || '',
+                sequence: ''
+            };
+        } else if (currentSeq && line) {
+            //Append sequence line (remove spaces and validate)
+            currentSeq.sequence += validateSequence(line);
+        }
+    });
+
+    //Push last sequence
+    if (currentSeq) {
+        sequences.push(currentSeq);
+    }
+
+    return sequences;
+};
+
+/**
+ * Detects if input is in FASTA format
+ * @param {string} input - Input text
+ * @returns {boolean} - True if FASTA format detected
+ */
+export const isFASTA = (input) => {
+    return input.trim().startsWith('>');
+};
+
 export const getGeneticCodeInfo = () => {
     return {
         name: 'Standard Genetic Code',
@@ -145,5 +195,93 @@ export const getGeneticCodeInfo = () => {
             'Does not include alternative start codons',
             'Does not handle ambiguous nucleotides (N, R, Y, etc.)'
         ]
+    };
+};
+
+/**
+ * Finds all stop codon positions in RNA sequence
+ * @param {string} rna - RNA sequence
+ * @returns {Array} - Array of stop codon positions
+ */
+export const findStopCodons = (rna) => {
+    const stopPositions = [];
+    const stopCodons = ['UAA', 'UAG', 'UGA'];
+
+    for (let i = 0; i < rna.length - 2; i += 3) {
+        const codon = rna.substring(i, i + 3);
+        if (stopCodons.includes(codon)) {
+            stopPositions.push({
+                position: i + 1, // 1-based position
+                codon: codon,
+                positionEnd: i + 3
+            });
+        }
+    }
+
+    return stopPositions;
+};
+
+/**
+ * Calculates amino acid composition
+ * @param {string} protein - Protein sequence
+ * @returns {Object} - Amino acid counts and percentages
+ */
+export const getAminoAcidComposition = (protein) => {
+    if (!protein || protein === 'No protein found') {
+        return {};
+    }
+
+    const counts = {};
+    const total = protein.length;
+
+    protein.split('').forEach(aa => {
+        counts[aa] = (counts[aa] || 0) + 1;
+    });
+
+    const composition = {};
+    Object.keys(counts).forEach(aa => {
+        composition[aa] = {
+            count: counts[aa],
+            percentage: ((counts[aa] / total) * 100).toFixed(2)
+        };
+    });
+
+    return composition;
+};
+
+/**
+ * Gets detailed protein information
+ * @param {string} protein - Protein sequence
+ * @returns {Object} - Detailed protein metrics
+ */
+export const getProteinInfo = (protein) => {
+    if (!protein || protein === 'No protein found') {
+        return {
+            length: 0,
+            molecularWeight: 0,
+            composition: {}
+        };
+    }
+
+    // Approximate molecular weights (in Daltons)
+    const aaWeights = {
+        'A': 89, 'R': 174, 'N': 132, 'D': 133, 'C': 121,
+        'E': 147, 'Q': 146, 'G': 75, 'H': 155, 'I': 131,
+        'L': 131, 'K': 146, 'M': 149, 'F': 165, 'P': 115,
+        'S': 105, 'T': 119, 'W': 204, 'Y': 181, 'V': 117
+    };
+
+    let molecularWeight = 0;
+    protein.split('').forEach(aa => {
+        molecularWeight += aaWeights[aa] || 0;
+    });
+
+    // Subtract water molecules (peptide bonds)
+    molecularWeight -= (18 * (protein.length - 1));
+
+    return {
+        length: protein.length,
+        molecularWeight: Math.round(molecularWeight),
+        composition: getAminoAcidComposition(protein)
     };
 };
